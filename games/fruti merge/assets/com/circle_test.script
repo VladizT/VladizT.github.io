@@ -1,0 +1,221 @@
+require "assets.com.ballsParam"
+go.property("type", 1)
+go.property("index", 1)
+go.property("isCollided", false)
+
+
+go.property("starting_ball", true)
+go.property("active", false)
+go.property("startPos", vmath.vector3())
+go.property("targetID", msg.url())
+go.property("t", 0)
+go.property("speed", 0)
+
+
+--num = 0
+
+function init(self)
+
+	--clearCollisions()
+
+	-----
+	--num = num + 1
+	--label.set_text("/test#test_num_1",  "num: "..num)
+	-----
+	
+	--msg.post("#sprite", "play_animation", { id = hash("circle_"..self.type) } )
+	msg.post("#collisionobject_"..self.type, "enable" )
+
+	index = index + 1
+	self.index = index
+
+	self.t = 0
+	self.speed = 10
+	-- Add initialization code here
+	-- Learn more: https://defold.com/manuals/script/
+	-- Remove this function if not needed
+
+end
+
+
+function clearCollisions()
+
+	for i = 1, 10 do
+		msg.post("#collisionobject_"..i, "disable" )
+	end
+
+end
+
+
+function final(self)
+	
+end
+
+function update(self, dt) 
+
+	if go.get("/factoryBalls#factoryBalls", "delete_all_balls" ) then delete(self) return end
+
+	if pause or pre_start then return end
+
+	if self.active then
+
+		self.t = self.t + ( self.speed * dt ) 
+
+		local targetPos = go.get_position(self.targetID)
+
+		local pos = vmath.lerp(self.t, self.startPos, targetPos)
+
+		go.set_position(pos)
+
+
+		local ease_factor = 1 - self.t
+
+		if ease_factor <= 0 then ease_factor = 0.01 end
+		
+		go.set_scale( ease_factor )
+		go.set("#sprite", "tint.w", ease_factor)
+		
+		if( self.t > 0.99 ) then
+
+			self.active = false
+			go.set_position(targetPos)
+
+			--num = num - 2
+
+			msg.post("factoryBalls", "collide", {CPoint = go.get_world_position(), type = self.type })
+			
+			
+			msg.post(self.targetID, "delete")
+			delete(self)
+
+			
+			
+		end
+
+	end
+	
+end
+
+
+
+
+function fixed_update(self, dt)
+	-- This function is called if 'Fixed Update Frequency' is enabled in the Engine section of game.project
+	-- Can be coupled with fixed updates of the physics simulation if 'Use Fixed Timestep' is enabled in
+	-- Physics section of game.project
+	-- Add update code here
+	-- Learn more: https://defold.com/manuals/script/
+	-- Remove this function if not needed
+end
+
+function delete( self ) 
+
+	go.delete()
+
+	msg.post("factoryBalls", "deleteBall", { index = self.index } )
+
+end
+
+function on_message(self, message_id, message, sender)
+
+	-----
+	--if true then self.starting_ball = false return end
+	-----
+	
+	if message_id == hash("delete") then
+		delete(self)
+	end
+
+	
+	if message_id == hash("contact_point_response") then
+
+		
+		if  message.group ~= hash("wall") then 
+
+			self.starting_ball = false
+
+		end
+		
+		if( message.group == hash("balls") and self.type < 10  ) then
+
+			local otherScriptUrl = msg.url(nil, message.other_id, "circle_test")
+	
+			if(go.get(otherScriptUrl, "type") == self.type) then
+				
+				if not self.isCollided and  not go.get(otherScriptUrl, "isCollided") then
+
+					local goMove = nil 
+					local target = nil
+					
+					self.isCollided = true
+					go.set(otherScriptUrl, "isCollided", true)
+
+					--------
+
+					-- local other_url = msg.url(nil, message.other_id, "collisionobject_"..go.get(msg.url(nil, message.other_id, "circle_test"), "type"))
+					-- local v1 = go.get("#collisionobject_"..self.type, "linear_velocity")
+					-- local v2 = go.get(other_url, "linear_velocity")
+					-- 
+					------------
+
+					local pos_y1 = go.get_position().y
+					local pos_y2 = go.get_position( message.other_id).y
+
+	
+					if pos_y1 > pos_y2  then
+					--if self.index > go.get(otherScriptUrl, "index") or go.get_id() == go.get("/factoryBalls#factoryBalls", "currSelectBall") then
+					--if	vmath.length(v1) > vmath.length(v2) then
+						goMove = go.get_id()
+						target = message.other_id
+					else 
+						goMove = message.other_id
+						target = go.get_id()
+					end
+
+	
+					local goMoveUrl = msg.url(nil, goMove, "circle_test")
+
+					msg.post(msg.url(nil, goMove, "collisionobject_"..go.get(msg.url(nil, goMove, "circle_test"), "type")), "disable")
+					go.set(goMoveUrl, "startPos", go.get_position(goMove))
+					go.set(goMoveUrl, "active", true)
+
+					
+					go.set(goMoveUrl, "targetID", msg.url(nil, target, nil))
+
+	
+					sound.play("/sounds#grow_sample_test")
+-- 					go.delete()
+-- 					go.delete(message.other_id)
+-- 
+-- 					msg.post("factoryBalls", "collide", {CPoint = go.get_world_position(), type = self.type })
+-- 
+				end	
+
+			end
+
+		end
+	end
+	
+end
+
+function on_input(self, action_id, action)
+	-- Add input-handling code here. The game object this script is attached to
+	-- must have acquired input focus:
+	--
+	--    msg.post(".", "acquire_input_focus")
+	--
+	-- All mapped input bindings will be received. Mouse and touch input will
+	-- be received regardless of where on the screen it happened.
+	-- Learn more: https://defold.com/manuals/input/
+	-- Remove this function if not needed
+end
+
+function on_reload(self)
+	-- Add reload-handling code here
+	-- Learn more: https://defold.com/manuals/hot-reload/
+	-- Remove this function if not needed
+end
+
+
+
+

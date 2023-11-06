@@ -1,0 +1,506 @@
+require "assets.com.ballsParam"
+require "assets.com.func"
+
+go.property("CPoint", vmath.vector3())
+go.property("dotTargetAction", false)
+go.property("dotTargetUrl", msg.url("/dotTarget"))
+
+go.property("readyToAppear", true)
+go.property("readyToLaunch", true)
+
+go.property("minDotX", 0)
+go.property("maxDotX",  0)
+go.property("posDotY", 0)
+
+go.property("currSelectBall", hash(""))
+
+go.property("typeSelectBall", msg.url())
+
+go.property("maxSpawnType", 1)
+
+go.property("delete_all_balls", false)
+
+pre_start = true
+pause = false
+
+actionPressed = false
+
+timer_to_appear = 0
+
+scores = 0
+best_scores = 0
+
+size_ball = 1
+
+local balls_array = {}
+
+
+local score_table = { 0, 1, 3, 8, 15, 30, 60, 120, 250, 700 }
+
+function init(self)
+
+	
+	msg.post("@render:", "use_fixed_fit_projection")
+
+	
+	sound.play("/music#music")
+	
+	local rulerPos = go.get("ruler", "position")
+
+	self.minDotX = rulerPos.x - go.get("ruler#sprite", "size").x/2
+	self.maxDotX = rulerPos.x + go.get("ruler#sprite", "size").x/2
+	self.posDotY = rulerPos.y
+	
+	local pos = vmath.vector3(rulerPos.x, rulerPos.y, 1)
+	
+	go.set( self.dotTargetUrl, "position", pos) 
+	--print( go.get("#sprite", "size") )
+	
+	-- Add initialization code here
+	-- Learn more: https://defold.com/manuals/script/
+	-- Remove this function if not needed
+
+	
+
+	--print("jstodef")
+	--print(jstodef)
+	
+	if jstodef then
+
+		jstodef.add_listener(js_listener)
+		
+	end
+
+	loadData( self )
+	
+	--timer.delay(1, true, function() saveData() end )
+	
+end
+
+function js_listener(self, message_id, message)
+	
+	if message_id == "final" then
+		
+		saveData()
+		
+	end
+
+end
+
+function final(self)
+	-- Add finalization code here
+	-- Learn more: https://defold.com/manuals/script/
+	-- Remove this function if not needed
+end
+
+function updateScores( num )
+
+	scores = scores + num
+	
+	msg.post("/GUI#gameGUI", "updateScores", { scores } )
+	
+end
+
+function update(self, dt) if pause then return end
+
+	
+	if self.delete_all_balls then 
+		msg.post(".","start", { actionPressed = false }) 
+		self.readyToAppear = true
+		return
+	end
+
+	
+	
+	if pre_start then return end
+
+	if timer_to_appear > 0 then
+
+		timer_to_appear = timer_to_appear - 1 * dt
+
+		if  timer_to_appear <= 0 then 
+
+			timer_to_appear = 0 
+			self.readyToAppear = true
+
+		end
+			
+	end
+
+	
+	
+	if self.dotTargetAction then
+
+		msg.post(self.dotTargetUrl, "enable") 
+		msg.post("/GUI#gameGUI", "dotEnabled", { enabled = true } )
+		
+	else
+		msg.post(self.dotTargetUrl, "disable")
+		msg.post("/GUI#gameGUI", "dotEnabled", { enabled = false } )
+	end
+
+	if  self.readyToAppear and checkStartBall(self) then 
+
+		
+		
+		self.typeSelectBall = 0
+
+		for i = 1, self.maxSpawnType do
+			self.typeSelectBall = self.typeSelectBall + 1
+			if math.random() > 0.6 then
+				break
+			end
+		end	
+
+
+		--self.typeSelectBall = 1
+
+		self.currSelectBall = factory.create("/factoryBalls#factory_"..self.typeSelectBall, vmath.vector3(self.maxDotX/2, self.posDotY, 0), nil, { type = self.typeSelectBall }, 0.2)
+		--self.currSelectBall = factory.create("/factoryBalls#factory", vmath.vector3(self.maxDotX/2, self.posDotY, 0), nil, { type = self.typeSelectBall }, 0.2)
+		
+		msg.post(msg.url(nil, self.currSelectBall, "collisionobject_"..self.typeSelectBall), "disable")
+
+		go.animate(msg.url(nil, self.currSelectBall, nil), "scale", go.PLAYBACK_ONCE_FORWARD, size_ball, go.EASING_OUTBACK, 0.5)
+
+		
+		self.readyToAppear = false
+		self.readyToLaunch = true
+		
+	end
+
+	--print(actionPressed)
+	
+	if actionPressed and self.readyToLaunch then 
+		
+		self.dotTargetAction = true
+		actionPressed = false
+	end
+
+	
+	
+end
+
+function getPosX(self, x) 
+
+	if x < self.minDotX then
+
+		return self.minDotX
+
+	elseif x > self.maxDotX then
+
+		return self.maxDotX
+
+	else
+
+		return x
+
+	end
+		
+
+end
+
+
+function checkStartBall(self)
+
+	if self.readyToAppear then return true end
+
+	if go.exists(self.currSelectBall) and self.currSelectBall ~= hash("")  then 
+
+		return not getP( self.currSelectBall, "circle_test",  "starting_ball")
+		
+	else 
+
+		return true
+
+	end
+	
+	
+end
+
+function fixed_update(self, dt)
+	-- This function is called if 'Fixed Update Frequency' is enabled in the Engine section of game.project
+	-- Can be coupled with fixed updates of the physics simulation if 'Use Fixed Timestep' is enabled in
+	-- Physics section of game.project
+	-- Add update code here
+	-- Learn more: https://defold.com/manuals/script/
+
+end
+
+
+
+function on_message(self, message_id, message, sender)
+
+	if message_id == hash("deleteBall") then
+		
+		deleteBall(message.index)
+		
+	end
+
+	if message_id  == hash("reset") then
+		--resetData()
+	end
+
+
+	if message_id  == hash("saveData") then
+
+		saveData()
+		
+	end
+	
+	if message_id == hash("start") then
+
+		msg.post(".","acquire_input_focus")
+
+		pre_start = false
+
+		self.maxSpawnType = 1
+
+		self.delete_all_balls = false
+		self.dotTargetAction = false
+		self.readyToLaunch = false
+		actionPressed = message.actionPressed
+
+		
+
+	end
+
+	if message_id == hash("restart") then
+		
+		self.delete_all_balls = true
+		timer_to_appear = 0
+
+		msg.post("/GUI#gameGUI", "resetScores" )
+
+	end
+
+
+
+	if( message_id == hash("collide") ) then
+		self.CPoint = message.CPoint
+
+		local newType =  message.type + 1
+		
+		local id = factory.create("/factoryBalls#factory_"..newType, vmath.vector3(self.CPoint.x, self.CPoint.y, 0), nil, { type = newType, starting_ball = false }, size_ball )
+
+		addBallsToArr( id )
+		
+		if newType < 6 and self.maxSpawnType < newType then
+			self.maxSpawnType = newType
+		end
+
+		go.set(msg.url(nil, id, nil), "scale", 0.7)
+		
+		go.animate(msg.url(nil, id, nil), "scale", go.PLAYBACK_ONCE_FORWARD, size_ball, go.EASING_OUTELASTIC, 0.5)
+
+
+		--go.animate(msg.url(nil, id, "sprite"), "tint", go.PLAYBACK_ONCE_BACKWARD, vmath.vector4(1, 1, 1, 1), go.EASING_INEXPO, 1.5)
+	
+		local idFX = factory.create("/factoryFX#factory"..newType, self.CPoint, nil, { type = newType })
+
+		go.set_parent(idFX, id, true)
+
+		updateScores(score_table[newType])
+
+	end
+	
+end
+
+function on_input(self, action_id, action)
+
+	
+	if action_id == hash("touch")  then 
+
+		
+
+		local rulerPos = go.get("ruler", "position")
+
+		
+		
+		if action.y < rulerPos.y and action.pressed then 
+
+			actionPressed = true
+			
+		end
+
+		
+		
+		if action.released then
+
+			actionPressed = false
+			
+		end
+
+
+		if self.dotTargetAction then
+			
+			local p = vmath.vector3(getPosX(self, action.x), self.posDotY, 0)
+			go.set( self.currSelectBall, "position", p)
+			go.set( self.dotTargetUrl, "position", vmath.vector3(action.x, action.y, 1))
+
+			msg.post("/GUI#gameGUI", "dotPosition", { x = action.x, y =action.y } )
+
+			if action.released then
+
+				self.dotTargetAction = false
+				msg.post(msg.url(nil, self.currSelectBall, "collisionobject_"..self.typeSelectBall), "enable")
+
+				apply_force_rotation( self.currSelectBall, math.random(-5000, 5000) )
+
+				addBallsToArr( self.currSelectBall )
+				
+				--actionPressed = false
+				self.readyToLaunch = false
+
+				timer_to_appear = 0.7
+				
+			end
+			
+		end
+		
+	end
+end
+
+
+function apply_force_rotation( id, power  ) 
+
+	if power > -2000 and power < 2000 then
+		power = 2000 
+	end
+	
+	local rot = go.get_rotation(id)
+	local _force = vmath.vector3(power, 0, 0)
+	_force = vmath.rotate(rot, _force)
+
+	local posBall = go.get_world_position(id)
+
+	msg.post(id, "apply_force", { force = _force, position = vmath.vector3(posBall.x, posBall.y+1, posBall.z) } )
+
+	_force = vmath.rotate(rot, -_force)
+	msg.post(id, "apply_force", { force = _force, position = vmath.vector3(posBall.x, posBall.y-1, posBall.z) } )
+
+end
+
+------------------------------------------------------------------
+
+local filename = sys.get_save_file("fruty_data_saves", "player")
+
+function loadData( self )
+
+	--resetData(true)
+	--print("load ")
+	
+	
+	local data = sys.load(filename) -- <2>
+
+	--print(data.player.balls)
+	
+	if data.player then
+
+		if data.player.scores then
+			scores = data.player.scores
+		end
+
+		if data.player.best_scores then
+			best_scores = data.player.best_scores
+		end
+
+		
+		if data.player.balls then
+
+			msg.post("/tutor#tutorFinger", "off")
+
+			
+			for _, v in ipairs(data.player.balls) do
+
+				if v.type < 6 and self.maxSpawnType < v.type then
+					self.maxSpawnType = v.type
+				end
+				
+				addBallsToArr( factory.create("/factoryBalls#factory_"..v.type, v.pos, nil, { type = v.type, starting_ball = false, id = v.id }, 1 ) )
+
+			end
+
+			index = table.maxn(balls_array)
+			
+		end
+		
+	end
+
+	msg.post("/GUI#gameGUI", "updateScores")
+
+	actionPressed = true
+
+end
+
+function saveData()
+
+	--print("save 1")
+
+	for i, val in ipairs(balls_array) do
+
+		balls_array[i].pos = go.get_position(balls_array[i].url)
+		
+	end
+
+	
+
+	local data = { scores = scores, best_scores = best_scores, balls = balls_array }
+
+
+	sys.save(filename, { player = data })  
+
+	--print("save 2")
+	--print(data.balls[1].pos)
+end
+
+function resetData( full  ) full = full or false
+
+	local data = { scores = 0, best_scores = 0, balls = balls_array }
+	
+	if not full then 
+
+		data.best_scores = best_scores
+
+	end
+	
+	sys.save(filename, { player = data }) 
+
+end
+
+
+function addBallsToArr( id )
+
+	local url = msg.url(nil,id,"circle_test")
+
+	local index = go.get(url, "index")
+
+	--print("add")
+	--print(balls_array)
+
+	table.insert(balls_array, { id = index, pos = go.get_position(url), type = go.get(url, "type"), url = url }) 
+
+	--print(table.maxn(balls_array))
+	
+end
+
+function deleteBall(id)
+
+	for i, val in ipairs(balls_array) do
+
+		if balls_array[i].id == id then
+			
+			table.remove(balls_array, i)
+			break
+			
+		end
+
+	end
+	
+end
+
+
+function on_reload(self)
+	-- Add reload-handling code here
+	-- Learn more: https://defold.com/manuals/hot-reload/
+	-- Remove this function if not needed
+end

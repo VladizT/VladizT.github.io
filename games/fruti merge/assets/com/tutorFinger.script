@@ -1,0 +1,80 @@
+
+
+function init(self)
+
+	msg.post(".", "acquire_input_focus")
+
+	
+	
+	local line_pos  = go.get_position("/finger_line#sprite")
+	local line_size = go.get("/finger_line#sprite", "size").x
+	
+	self.min_x = line_pos.x - line_size/2
+
+	self.max_x = line_pos.x + line_size/2
+
+	go.set_position(vmath.vector3(self.min_x, line_pos.y, 1), "finger")
+
+	go.animate("finger", "position", go.PLAYBACK_LOOP_PINGPONG, vmath.vector3(self.max_x, line_pos.y, 1), go.EASING_INOUTQUAD, 4)
+	
+	msg.post("finger_line", "disable")
+
+end
+
+function final(self)
+	-- Add finalization code here
+	-- Learn more: https://defold.com/manuals/script/
+	-- Remove this function if not needed
+end
+
+function update(self, dt)
+
+	
+end
+
+function fixed_update(self, dt)
+	-- This function is called if 'Fixed Update Frequency' is enabled in the Engine section of game.project
+	-- Can be coupled with fixed updates of the physics simulation if 'Use Fixed Timestep' is enabled in
+	-- Physics section of game.project
+	-- Add update code here
+	-- Learn more: https://defold.com/manuals/script/
+	-- Remove this function if not needed
+end
+
+function on_message(self, message_id, message, sender)
+
+	if message_id == hash("off") then
+
+		dis( false )
+		
+	end
+	
+end
+
+function on_input(self, action_id, action)
+
+	if action_id == hash("touch") and action.pressed then
+
+		dis( true )
+		
+	end
+	
+end
+
+
+function dis( press ) 
+
+	msg.post(".", "release_input_focus")
+	msg.post("finger", "disable")
+	go.cancel_animations("finger")
+
+	msg.post("/factoryBalls#factoryBalls", "start", { actionPressed = press })
+	
+end
+
+
+function on_reload(self)
+	-- Add reload-handling code here
+	-- Learn more: https://defold.com/manuals/hot-reload/
+	-- Remove this function if not needed
+end

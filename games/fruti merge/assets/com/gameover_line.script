@@ -1,0 +1,124 @@
+require "assets.com.func"
+
+go.property("countdown", 0)
+go.property("timer", 0)
+
+go.property("is_touch_ball", hash(""))
+go.property("is_touch", false)
+
+go.property("active", false)
+
+function init(self)
+
+	self.countdown = 2
+	
+end
+
+function final(self)
+	-- Add finalization code here
+	-- Learn more: https://defold.com/manuals/script/
+	-- Remove this function if not needed
+end
+
+function update(self, dt) 
+
+	if pause then return end
+
+	if pre_start then return end
+
+	--для тестов  
+	--self.is_touch_ball = true
+	-----------
+
+
+	if self.is_touch then 
+
+		if not self.active then
+
+			self.timer = self.countdown
+			self.active = true
+
+			go.animate("#sprite", "tint.w", go.PLAYBACK_LOOP_PINGPONG, 0, go.EASING_LINEAR, 0.5)
+
+		end
+
+
+		if self.timer <= 0 then
+
+			go.cancel_animations("#sprite")
+
+			msg.post("/GUI#gameGUI", "game_over")
+
+		end
+
+		self.timer = self.timer - 1 * dt
+
+	end
+
+	if self.is_touch_ball ~= hash("") and not go.exists(self.is_touch_ball) then
+
+		reset(self)
+		
+	end
+
+
+end
+
+function fixed_update(self, dt) 
+
+end
+
+function checkTouch()
+
+
+end
+
+function on_message(self, message_id, message, sender)
+
+	if message_id == hash( "reset" ) then
+
+		reset(self)
+
+	end	
+
+	if  message.group == hash( "balls" ) and not getP(message.other_id, "circle_test", "starting_ball") then
+
+		if self.is_touch_ball == hash("")  then
+			self.is_touch_ball = message.other_id
+			self.is_touch = true
+		end
+
+	end	
+
+	if  message_id == hash("trigger_response") then 
+
+		if not message.enter and  message.other_id == self.is_touch_ball then
+
+			reset(self)
+
+		end	
+
+	end	
+	
+end
+
+function reset(self) 
+
+	self.is_touch_ball = hash("")
+	self.is_touch = false
+	self.active = false
+	go.cancel_animations("#sprite")
+	go.set("#sprite", "tint.w", 1)
+
+end
+
+function on_input(self, action_id, action)
+
+	
+end
+
+function on_reload(self)
+	-- Add reload-handling code here
+	-- Learn more: https://defold.com/manuals/hot-reload/
+	-- Remove this function if not needed
+end
