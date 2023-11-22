@@ -1,13 +1,13 @@
 [project]
-title = Fruty merge VK
-version = 1.0
+title = Fruty merge HD
+version = 1.1
 write_log = 0
 compress_archive = 1
 publisher = unnamed
 developer = unnamed
-custom_resources = 
+custom_resources = /i18n/
 bundle_resources = /res/
-title_as_file_name = FrutymergeVK
+title_as_file_name = FrutymergeHD
 
 [display]
 width = 468
@@ -32,7 +32,7 @@ clear_color_alpha = 0
 type = 2D
 max_collision_object_count = 1000
 use_fixed_timestep = 1
-gravity_y = -800.0
+gravity_y = -1000.0
 debug = 0
 debug_alpha = 0.9
 world_count = 4
@@ -154,7 +154,7 @@ app_icon =
 
 [html5]
 custom_heap_size = 0
-heap_size = 128
+heap_size = 256
 htmlfile = /assets/engine_template.html
 cssfile = /assets/custom.css
 splash_image = /image/iconpreload.png
@@ -168,7 +168,7 @@ show_console_banner = 0
 scale_mode = fit
 
 [particle_fx]
-max_count = 512
+max_count = 1024
 max_emitter_count = 64
 max_particle_count = 1024
 
@@ -210,10 +210,7 @@ fixed_update_frequency = 60
 [native_extension]
 app_manifest = /AppManifest.appmanifest
 
-[vk_bridge]
-auto_init = true
-wv_banners = true
-interstitial_day_limit = 0
-interstitial_hour_limit = 0
-interstitial_delay = 0
+[liveupdate_reszip]
+preload_file = resources.zip
+wipe_on_start = 1
 

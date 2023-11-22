@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, minimal-ui, shrink-to-fit=no"> 
   <meta name="apple-mobile-web-app-capable" content="yes"> 
   <!-- The above 4 meta tags *must* come first in the head; any other head content must come *after* these tags --> 
-  <title>Fruty merge VK 1.0</title> 
+  <title>Fruty merge HD 1.1</title> 
   <style type="text/css">
 	/* Disable user selection to avoid strange bug in Chrome on Windows:
 	* Selecting a text outside the canvas, then clicking+draging would
@@ -108,27 +108,27 @@
 	}
 
 	body {
-		background-color: #1e2226;
-		background-image:url("underbackground.png");
+		background-color: #222222;
+		background-image:url("background_image.png");
 
 		background-attachment: fixed;
-		background-repeat:repeat;
+		background-repeat:no-repeat;
+		background-position:center;
 		
-		background-size: 10%;
+		background-size: cover;
 		background-width: 100%;
 		background-height: 100%;
 	}
 
 	.canvas-app-container {
-		background-color: #1e2226;
+		background-color: #222222;
 		background-image:url("underbackground.png");
 
 		background-attachment: fixed;
-		background-repeat:repeat;
+		background-repeat:repeat repeat;
 		
-		background-size: 10%;
-		background-width: 100%;
-		background-height: 100%;
+		background-size: 100%;
+		
 }
 
 	.canvas-app-canvas {
@@ -140,96 +140,6 @@
 
 	}
 	</style> 
-  <script type="text/javascript">
-        (function (d) {
-            window.VkBridgeHelper = {};
-            var VkBridgeHelper = window.VkBridgeHelper
-            VkBridgeHelper.VKBRIDGE_INIT_ID = 0
-            VkBridgeHelper.VKBRIDGE_SUBSCRIBE_ID = 1
-            VkBridgeHelper.wv_banners = "true" === "true";
-
-            VkBridgeHelper.msgQueue = [];
-            var send = function (cb_id, message_id, message) {
-                if (typeof VkBridgeLibrary !== "undefined") {
-                    VkBridgeLibrary.send(cb_id, message_id, message);
-                } else {
-                    VkBridgeHelper.msgQueue.push([cb_id, message_id, message]);
-                }
-            };
-
-            VkBridgeHelper.conver_error = function (err) {
-                var new_err;
-                if (typeof err !== "object") {
-                    new_err = {
-                        error_type: "Unknown error",
-                        error_data: {
-                            error_code: -1,
-                            error_reason: err + ""
-                        }
-                    };
-                } else {
-                    new_err = err;
-                }
-                return JSON.stringify(new_err);
-            }
-
-            VkBridgeHelper.send_subscribe = function (response) {
-                send(VkBridgeHelper.VKBRIDGE_SUBSCRIBE_ID, "subscribe", response);
-            }
-
-            var load_script = function (src, onload, onerror) {
-                var t = d.getElementsByTagName("script")[0];
-                var s = d.createElement("script");
-                s.src = src;
-                s.async = true;
-                t.parentNode.insertBefore(s, t);
-                s.onload = onload;
-                s.onerror = onerror;
-            }
-
-            var on_loaded_scripts = function () {
-                vkBridge.subscribe(response => {
-                    VkBridgeHelper.send_subscribe(response);
-                });
-                // Initialize vkBridge
-                vkBridge.send('VKWebAppInit').then(function (response) {
-                    if (response.result) {
-                        send(VkBridgeHelper.VKBRIDGE_INIT_ID, "init", vkBridge);
-                    } else {
-                        send(VkBridgeHelper.VKBRIDGE_INIT_ID, "error", VkBridgeHelper.conver_error("vkBridge is not initialized."));
-                    }
-                }).catch(function (err) {
-                    send(VkBridgeHelper.VKBRIDGE_INIT_ID, "error", VkBridgeHelper.conver_error(err));
-                });
-            }
-
-            VkBridgeHelper.init = function () {
-                load_script("https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js", function () {
-                    if (vkBridge.isWebView() && VkBridgeHelper.wv_banners) {
-                        load_script("vkui-4.25.2.min.js?version=1.0", function () {
-                            VkBridgeHelper.app = new App();
-                            VkBridgeHelper.send_subscribe({ type: "VKUIInitResult", result: true });
-                        }, function () {
-                            VkBridgeHelper.send_subscribe({ type: "VKUIInitError", error: VkBridgeHelper.conver_error("Error loading VKUI. Reload the page.") });
-                        });
-                    } else {
-                        VkBridgeHelper.send_subscribe({ type: "VKUIInitResult", result: false, message: "Not supported for this platform." });
-                    }
-                    on_loaded_scripts();
-                }, function () {
-                    send(VkBridgeHelper.VKBRIDGE_INIT_ID, "error", VkBridgeHelper.conver_error("Error loading VK SDK. Reload the page."));
-                });
-            }
-
-            VkBridgeHelper.autoInit = true;
-            // 
-            VkBridgeHelper.autoInit = "true" === "true";
-            // 
-            if (VkBridgeHelper.autoInit) {
-                VkBridgeHelper.init();
-            }
-        })(document);
-    </script>
  </head> 
  <body> 
   <div id="running-from-file-warning" style="display: none; margin: 3em;"> 
@@ -253,7 +163,7 @@
 			return ("archive" + path + "");
 		},
 		engine_arguments: ["--verify-graphics-calls=false",],
-		custom_heap_size: 134217728,
+		custom_heap_size: 268435456,
 		full_screen_container: "#canvas-container",
 		disable_context_menu: true
 	}
@@ -269,7 +179,7 @@
 		// dmengine*.wasm is hardcoded in the built JS loader for WASM,
 		// we need to replace it here with the correct project name.
 		if (path == "dmengine.wasm" || path == "dmengine_release.wasm" || path == "dmengine_headless.wasm") {
-			path = "FrutymergeVK.wasm";
+			path = "FrutymergeHD.wasm";
 		}
 		return scriptDirectory + path;
 	};
@@ -327,25 +237,69 @@
 	window.addEventListener('resize', resize_game_canvas, false);
 	window.addEventListener('orientationchange', resize_game_canvas, false);
 	window.addEventListener('focus', resize_game_canvas, false);
-	</script> 
-  <script id="engine-start" type="text/javascript">
-		var runningFromFileWarning = document.getElementById("running-from-file-warning");
-		if (window.location.href.startsWith("file://")) {
-			runningFromFileWarning.style.display = "block";
-		}
-		else {
-			EngineLoader.stream_wasm = "false" === "true";
-			EngineLoader.load("canvas", "FrutymergeVK");
-			runningFromFileWarning.parentNode.removeChild(runningFromFileWarning);
-		}
-		
-	</script> 
-  <script id="jstodef" type="text/javascript">
-		
-		onbeforeunload = (event) => JsToDef.send("final")
-		
-	</script>   
-  <div id="vk-container" class="vkui__root"> 
-  </div>
+	
+            // 
+            // HashSHA1 implementation
+            !function(){var r=function(r){for(var n="",t=7;t>=0;t--)n+="0123456789abcdef".charAt(r>>4*t&15);return n},n=function(r,n){var t=(65535&r)+(65535&n);return(r>>16)+(n>>16)+(t>>16)<<16|65535&t},e=function(r,n){return r<<n|r>>>32-n},o=function(r,n,t,e){return r<20?n&t|~n&e:r<40?n^t^e:r<60?n&t|n&e|t&e:n^t^e},u=function(r){return r<20?1518500249:r<40?1859775393:r<60?-1894007588:-899497514};window._HashSHA1=function(f){for(var a=function(r){for(var n=1+(r.length+8>>6),t=new Array(16*n),e=0;e<16*n;e++)t[e]=0;for(e=0;e<r.length;e++)t[e>>2]|=r.charCodeAt(e)<<24-e%4*8;return t[e>>2]|=128<<24-e%4*8,t[16*n-1]=8*r.length,t}(f),c=new Array(80),i=1732584193,h=-271733879,v=-1732584194,A=271733878,g=-1009589776,l=0;l<a.length;l+=16){for(var w=i,d=h,y=v,H=A,b=g,s=0;s<80;s++)c[s]=s<16?a[l+s]:e(c[s-3]^c[s-8]^c[s-14]^c[s-16],1),t=n(n(e(i,5),o(s,h,v,A)),n(n(g,c[s]),u(s))),g=A,A=v,v=e(h,30),h=i,i=t;i=n(i,w),h=n(h,d),v=n(v,y),A=n(A,H),g=n(g,b)}return r(i)+r(h)+r(v)+r(A)+r(g)}}();
+            // 
+
+            var old_preloadAndCallMain = Module._preloadAndCallMain;
+            Module._preloadAndCallMain = function () {
+                // 
+                // Delete all LiveUpdate files stored in IDBFS
+                var dir = DMSYS.GetUserPersistentDataRoot();
+                var resDir = _HashSHA1("Fruty merge HD");
+                try {
+                    FS.unlink(dir + "/." + resDir + "/liveupdate.arcd");
+                } catch (e) {}
+                try {
+                    FS.unlink(dir + "/." + resDir + "/liveupdate.arci");
+                } catch (e) {}
+                try {
+                    FS.unlink(dir + "/." + resDir + "/liveupdate.arci.tmp");
+                } catch (e) {}
+                try {
+                    FS.unlink(dir + "/." + resDir + "/liveupdate.mounts");
+                } catch (e) {}
+                // 
+
+                if (Module._archiveLoaded) {
+                    // 
+                    _dmResZipRequestFileAsync("resources.zip");
+                    // 
+                }
+                old_preloadAndCallMain();
+            };
+        </script> 
+  <script id="engine-start" type="text/javascript" merge="keep">
+      var loaded = false;
+      var onload = function () {
+        YaGames.init().then(function (ysdk) {
+          window.ysdk = ysdk;
+          ysdk
+            .getStorage()
+            .then((safeStorage) =>
+              Object.defineProperty(window, "localStorage", {
+                get: () => safeStorage,
+              })
+            )
+            .then(() => {
+              if (!loaded) {
+                if (typeof load_engine === "function") {
+                  load_engine();
+                } else {
+                  EngineLoader.load("canvas", "FrutymergeHD");
+                }
+                loaded = true;
+              }
+            });
+        });
+      };
+      var ysdk = document.createElement("script");
+      ysdk.type = "text/javascript";
+      ysdk.src = "https://yandex.ru/games/sdk/v2";
+      ysdk.onload = onload;
+      document.head.appendChild(ysdk);
+    </script>   
  </body>
 </html>
